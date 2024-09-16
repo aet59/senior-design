@@ -1,0 +1,6 @@
+Create the virtual environment: python3 -m venv venv
+Activate it: source venv/bin/activate
+Run the app: python3 cycle1.py
+Install Ngrok (follow the steps from the Ngrok website)
+In a new terminal, while cycle1.py is running on a virtual environment: ngrok http 80
+Ngrok will generate a temporary link to access the app
