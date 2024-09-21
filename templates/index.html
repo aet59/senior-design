@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Camera Stream</title>
+    <style>
+        video {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stream from Phone Camera</h1>
+    <video id="video" autoplay playsinline></video>
+
+    <script>
+        async function startCamera() {
+            try {
+                const videoElement = document.getElementById('video');
+                
+                // Use WebRTC to access the rear camera (environment)
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { exact: "environment" }  // Use rear camera
+                    }
+                });
+                
+                videoElement.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing the camera: ", err);
+                alert("Camera access failed: " + err.message);
+            }
+        }
+
+        window.onload = startCamera;
+    </script>
+</body>
+</html>
+

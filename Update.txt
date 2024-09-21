@@ -1,0 +1,26 @@
+Public Git (Where we pulled files from): https://github.com/miguelgrinberg/flask-video-streaming
+
+Files:
+1. Cycle1.py (Our code): The main Flask application that serves the video stream webpage. The app is set to run host 0.0.0.0 and port 80 to be accessible on the local network.
+
+2. camera_opencv.py: This file implements camera functionality using OpenCV. It captures frames from the camera and streams them. The camera source cane changed and is currently set to use OpenCV's backend for capturing video.
+
+3. camera.py: This imports the correct camera driver, selecting the appropriate camera module based on the environment.
+
+4. index.html: It uses WebRTC to access the device's camera and displays the video feed on the webpage via the navigator.mediaDevices.getUserMedia API.
+
+5. base_camera.py: Defines the base camera class. This also provides the structure for managing the camera in a thread-safe manner and handling multiple clients accessing the camera feed.
+
+
+
+Changes made for git pulled files:
+1. camera_opencv.py: 
+- Modified the video_source to switch between different camera.
+- Added handling for mobile devices, prioritizing the rear-facing camera.
+2. index.html
+- Created and updated the HTML page to use WebRTC (navigator.mediaDevices.getUserMedia).
+- Added the plays inline attribute to prevent fullscreen video on mobile devices.
+- Error handling for camera access failures.
+
+
+
