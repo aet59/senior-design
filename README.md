@@ -1,5 +1,5 @@
 # senior-design
-Version # : 1.0.0
+Version Number: 1.0.0
 
 Description:
 This website is a real-time video streaming system built using Flask, OpenCV, and webRTC.
