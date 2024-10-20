@@ -33,7 +33,7 @@ class Camera(BaseCamera):
                 print("Failed to capture image from camera.")
                 continue  # If failed, skip this frame and try again
 
-            # Convert the frame to JPEG format and yield it for streaming
+            # Convert the frame ccoto JPEG format and yield it for streaming
             yield cv2.imencode('.jpg', img)[1].tobytes()
 
 

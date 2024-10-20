@@ -3,38 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phone Camera Stream</title>
+    <title>Video Stream with Continuous Recording</title>
     <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+        }
+
         video {
             width: 100%;
             height: auto;
+            max-height: 80vh;
+            background-color: black;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+            border: none;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .record-button {
+            width: 80px;
+            height: 80px;
+            background-color: white;
+            border-radius: 50%;
+            border: 5px solid #ff3b30;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .record-button:hover {
+            background-color: #ff3b30;
+        }
+
+        .switch-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.6);
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            color: black;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .switch-button:hover {
+            background-color: rgba(255, 255, 255, 1);
+        }
+
+        video::-webkit-media-controls-fullscreen-button {
+            display: none;
+        }
+
+        video {
+            -webkit-appearance: none;
+            appearance: none;
         }
     </style>
 </head>
 <body>
-    <h1>Stream from Phone Camera</h1>
+
     <video id="video" autoplay playsinline></video>
 
+    <button id="switch-camera" class="switch-button">🔄</button>
+
+    <div class="controls">
+        <button id="start-recording" class="record-button"></button>
+    </div>
+
     <script>
+        let currentStream;
+        let mediaRecorder;
+        let recordedChunks = [];
+        let useFrontCamera = false;
+        let isRecording = false;
+
+        const videoElement = document.getElementById('video');
+        const recordButton = document.getElementById('start-recording');
+
+        // Start the camera
         async function startCamera() {
+            const constraints = {
+                video: {
+                    facingMode: useFrontCamera ? 'user' : 'environment'
+                }
+            };
+
             try {
-                const videoElement = document.getElementById('video');
-                
-                // Use WebRTC to access the rear camera (environment)
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: { exact: "environment" }  // Use rear camera
-                    }
-                });
-                
-                videoElement.srcObject = stream;
-            } catch (err) {
-                console.error("Error accessing the camera: ", err);
-                alert("Camera access failed: " + err.message);
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                videoElement.srcObject = currentStream; 
+            } catch (error) {
+                console.error('Error accessing camera: ', error);
             }
         }
 
-        window.onload = startCamera;
+        document.getElementById('switch-camera').addEventListener('click', () => {
+            useFrontCamera = !useFrontCamera;
+            if (currentStream) {
+                const tracks = currentStream.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+            startCamera();  // Restart the camera stream
+        });
+
+        // Record the video
+        recordButton.addEventListener('click', () => {
+            if (!isRecording) {
+                recordedChunks = [];
+                const recordingStream = new MediaStream(currentStream.getVideoTracks());
+                mediaRecorder = new MediaRecorder(recordingStream);
+                mediaRecorder.ondataavailable = function(event) {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = function() {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const formData = new FormData();
+                    formData.append('video', blob, 'recorded-video.webm');
+                    fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    }).then(response => {
+                        if (response.ok) {
+                            alert('Video uploaded successfully!');
+                        } else {
+                            alert('Failed to upload video.');
+                        }
+                    });
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                recordButton.style.backgroundColor = "#ff3b30";  // Change button color to indicate recording
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordButton.style.backgroundColor = "white";  // Reset button color
+            }
+        });
+
+        startCamera();
     </script>
 </body>
 </html>
