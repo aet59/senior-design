@@ -1,4 +1,4 @@
-Public Git (Where we pulled files from): https://github.com/miguelgrinberg/flask-video-streaming
+Public Git (Where we pulled the files from): https://github.com/miguelgrinberg/flask-video-streaming
 
 Files:
 1. Cycle1.py (Our code): The main Flask application that serves the video stream webpage. The app is set to run host 0.0.0.0 and port 80 to be accessible on the local network.
