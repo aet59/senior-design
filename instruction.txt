@@ -2,7 +2,7 @@ Create the virtual environment: python3 -m venv venv
 Activate it: source venv/bin/activate
 Install Flask and OpenCV: pip install flask opencv-python
 Install other requirements: pip install -r requirements.txt
-Run the app: python3 cycle1.py
+Run the app: python3 cycle3.py
 Install Ngrok (follow the steps from Ngrok website)
 In a new terminal, while cycle1.py is running on a virtual environment: ngrok http 80 (this can be altered)
 Ngrok will generate a temporary link to access the app

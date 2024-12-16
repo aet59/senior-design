@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Stream with Continuous Recording</title>
+    <title>Photo Capture</title>
     <style>
         body {
             margin: 0;
@@ -12,20 +12,14 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background-color: black;
+            background: black;
         }
-
         video {
             width: 100%;
-            height: auto;
             max-height: 80vh;
-            background-color: black;
+            background: black;
             object-fit: contain;
-            display: block;
-            margin: 0 auto;
-            border: none;
         }
-
         .controls {
             position: fixed;
             bottom: 20px;
@@ -33,26 +27,23 @@
             display: flex;
             justify-content: center;
         }
-
-        .record-button {
-            width: 80px;
-            height: 80px;
-            background-color: white;
+        .photo-button {
+            width: 70px;
+            height: 70px;
+            background: white;
             border-radius: 50%;
-            border: 5px solid #ff3b30;
+            border: 3px solid black;
             cursor: pointer;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
-
-        .record-button:hover {
-            background-color: #ff3b30;
+        .photo-button:hover {
+            background: lightgray;
         }
-
         .switch-button {
             position: fixed;
             top: 20px;
             right: 20px;
-            background-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.6);
             border: none;
             padding: 10px;
             border-radius: 50%;
@@ -61,106 +52,58 @@
             color: black;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         }
-
         .switch-button:hover {
-            background-color: rgba(255, 255, 255, 1);
-        }
-
-        video::-webkit-media-controls-fullscreen-button {
-            display: none;
-        }
-
-        video {
-            -webkit-appearance: none;
-            appearance: none;
+            background: rgba(255, 255, 255, 1);
         }
     </style>
 </head>
 <body>
-
     <video id="video" autoplay playsinline></video>
-
     <button id="switch-camera" class="switch-button">🔄</button>
-
     <div class="controls">
-        <button id="start-recording" class="record-button"></button>
+        <button id="take-photo" class="photo-button"></button>
     </div>
-
     <script>
-        let currentStream;
-        let mediaRecorder;
-        let recordedChunks = [];
-        let useFrontCamera = false;
-        let isRecording = false;
-
+        let currentStream, useFrontCamera = false;
         const videoElement = document.getElementById('video');
-        const recordButton = document.getElementById('start-recording');
+        const photoButton = document.getElementById('take-photo');
 
-        // Start the camera
         async function startCamera() {
-            const constraints = {
-                video: {
-                    facingMode: useFrontCamera ? 'user' : 'environment'
-                }
-            };
-
+            const constraints = { video: { facingMode: useFrontCamera ? 'user' : 'environment' } };
             try {
                 currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-                videoElement.srcObject = currentStream; 
+                videoElement.srcObject = currentStream;
             } catch (error) {
-                console.error('Error accessing camera: ', error);
+                console.error('Camera error:', error);
             }
         }
 
         document.getElementById('switch-camera').addEventListener('click', () => {
             useFrontCamera = !useFrontCamera;
-            if (currentStream) {
-                const tracks = currentStream.getTracks();
-                tracks.forEach(track => track.stop());
-            }
-            startCamera();  // Restart the camera stream
+            currentStream.getTracks().forEach(track => track.stop());
+            startCamera();
         });
 
-        // Record the video
-        recordButton.addEventListener('click', () => {
-            if (!isRecording) {
-                recordedChunks = [];
-                const recordingStream = new MediaStream(currentStream.getVideoTracks());
-                mediaRecorder = new MediaRecorder(recordingStream);
-                mediaRecorder.ondataavailable = function(event) {
-                    if (event.data.size > 0) {
-                        recordedChunks.push(event.data);
-                    }
-                };
-
-                mediaRecorder.onstop = function() {
-                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                    const formData = new FormData();
-                    formData.append('video', blob, 'recorded-video.webm');
-                    fetch('/upload', {
-                        method: 'POST',
-                        body: formData
-                    }).then(response => {
-                        if (response.ok) {
-                            alert('Video uploaded successfully!');
-                        } else {
-                            alert('Failed to upload video.');
-                        }
-                    });
-                };
-
-                mediaRecorder.start();
-                isRecording = true;
-                recordButton.style.backgroundColor = "#ff3b30";  // Change button color to indicate recording
-            } else {
-                mediaRecorder.stop();
-                isRecording = false;
-                recordButton.style.backgroundColor = "white";  // Reset button color
-            }
+        photoButton.addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            uploadPhoto(canvas.toDataURL('image/jpeg'));
         });
+
+        function uploadPhoto(dataUrl) {
+            fetch('/upload_photo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: dataUrl })
+            })
+            .then(response => response.ok ? alert('Photo uploaded!') : alert('Upload failed.'))
+            .catch(error => console.error('Upload error:', error));
+        }
 
         startCamera();
     </script>
 </body>
 </html>
-
